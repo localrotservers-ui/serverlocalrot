@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>LocalRot-Server | Secure Roblox Trading</title>
+
+<!-- =========================================================
+     PAYPAL SDK (UNE SEULE FOIS – OBLIGATOIRE)
+========================================================= -->
+<script
+  src="https://www.paypal.com/sdk/js?client-id=BAAMNVzmgHAir1o9YnJ-JQiq_dHI25uwjlZNBg5idAOL99ZpqP0uJHfUKnZRL9vvJNK1NS2o1qtN7Ln4IY&components=hosted-buttons&disable-funding=venmo&currency=EUR">
+</script>
+
+<!-- =========================================================
+     STYLE GLOBAL — ENTREPRISE / ROUGE & NOIR CLAIR
+========================================================= -->
+<style>
+
+/* =========================================================
+   VARIABLES GLOBALES
+========================================================= */
+:root{
+    --bg-main:#0b0b10;
+    --bg-card:#12121a;
+    --bg-soft:#181826;
+    --red:#e11d48;
+    --red-dark:#be123c;
+    --text:#f9fafb;
+    --muted:#9ca3af;
+    --border:#272738;
+    --radius:16px;
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",system-ui,sans-serif;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+body{
+    background:linear-gradient(180deg,#0b0b10,#050507);
+    color:var(--text);
+    min-height:100vh;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:24px 50px;
+    border-bottom:1px solid var(--border);
+}
+
+.logo{
+    font-size:26px;
+    font-weight:900;
+    color:var(--red);
+    letter-spacing:0.5px;
+}
+
+.userbox{
+    font-size:14px;
+    color:var(--muted);
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+nav{
+    display:flex;
+    gap:32px;
+    padding:18px 50px;
+    border-bottom:1px solid var(--border);
+}
+
+nav button{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:15px;
+    cursor:pointer;
+}
+
+nav button.active{
+    color:var(--red);
+    font-weight:700;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+.container{
+    max-width:1300px;
+    margin:auto;
+    padding:50px;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+.card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:40px;
+    box-shadow:0 40px 100px rgba(0,0,0,.65);
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+input,select{
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-size:14px;
+}
+
+input::placeholder{
+    color:#6b7280;
+}
+
+button.primary{
+    width:100%;
+    margin-top:20px;
+    padding:15px;
+    background:var(--red);
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    color:white;
+    cursor:pointer;
+}
+
+button.primary:hover{
+    background:var(--red-dark);
+}
+
+/* =========================================================
+   AUTH LINKS
+========================================================= */
+.auth-switch{
+    margin-top:18px;
+    font-size:14px;
+    color:var(--muted);
+    text-align:center;
+}
+
+.auth-switch span{
+    color:var(--red);
+    cursor:pointer;
+    font-weight:600;
+}
+
+/* =========================================================
+   SERVERS GRID
+========================================================= */
+.servers-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:22px;
+}
+
+.server-card{
+    background:#0f0f18;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px;
+    transition:transform .2s ease, border .2s ease;
+}
+
+.server-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--red);
+}
+
+.server-card h3{
+    margin-bottom:10px;
+    font-size:18px;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+}
+
+.modal-content{
+    width:520px;
+}
+
+/* =========================================================
+   PAYPAL – REDUIT VISUELLEMENT
+========================================================= */
+.paypal-wrapper{
+    margin-top:20px;
+    transform:scale(0.85);              /* 👈 réduit la taille */
+    transform-origin:top center;
+}
+
+.hidden{
+    display:none;
+}
+
+/* =========================================================
+   TEXT LONG
+========================================================= */
+.long-text{
+    line-height:1.9;
+    color:#e5e7eb;
+    font-size:15px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+<header>
+    <div class="logo">LocalRot-Server</div>
+    <div class="userbox" id="userBox"></div>
+</header>
+
+<!-- =========================================================
+     NAVIGATION
+========================================================= -->
+<nav id="nav" class="hidden">
+    <button class="active" onclick="showTab('account',this)">Compte</button>
+    <button onclick="showTab('servers',this)">Serveurs</button>
+    <button onclick="showTab('contact',this)">Nous contacter</button>
+    <button onclick="showTab('about',this)">À propos</button>
+</nav>
+
+<div class="container">
+
+<!-- =========================================================
+     AUTHENTIFICATION
+========================================================= -->
+<div id="auth" class="card">
+    <h2 id="authTitle">Connexion</h2>
+
+    <input id="authUser" placeholder="Pseudo">
+    <input id="authPass" type="password" placeholder="Mot de passe">
+
+    <button class="primary" onclick="submitAuth()" id="authBtn">
+        Se connecter
+    </button>
+
+    <div class="auth-switch">
+        <span id="authSwitchText">Pas de compte ?</span>
+        <span onclick="switchAuth()">S’inscrire</span>
+    </div>
+
+    <p id="authMsg"></p>
+</div>
+
+<!-- =========================================================
+     COMPTE
+========================================================= -->
+<div id="account" class="card hidden">
+    <h2>Mon compte</h2>
+    <p>Pseudo : <strong id="accUser"></strong></p>
+</div>
+
+<!-- =========================================================
+     SERVEURS
+========================================================= -->
+<div id="servers" class="card hidden">
+    <h2>Serveurs Roblox disponibles</h2>
+    <div class="servers-grid" id="serversGrid"></div>
+</div>
+
+<!-- =========================================================
+     MODAL RESERVATION
+========================================================= -->
+<div id="reserveModal" class="modal hidden">
+    <div class="card modal-content">
+        <h2 id="reserveTitle"></h2>
+
+        <input id="emailInput" placeholder="Email obligatoire">
+
+        <select id="type">
+            <option value="hour">Heures</option>
+            <option value="day">Jours</option>
+            <option value="month">Mois</option>
+        </select>
+
+        <input id="amount" type="number" min="1" value="1">
+        <input id="dateInput" type="date">
+
+        <p><strong>Prix :</strong> <span id="price">0€</span></p>
+
+        <button id="confirmBtn" class="primary">
+            Confirmer la réservation
+        </button>
+
+        <!-- PAYPAL 1 MOIS -->
+        <div id="paypal-1month" class="paypal-wrapper hidden"></div>
+
+        <!-- PAYPAL 2 MOIS -->
+        <div id="paypal-2month" class="paypal-wrapper hidden"></div>
+
+        <p id="reserveMsg"></p>
+    </div>
+</div>
+
+<!-- =========================================================
+     CONTACT
+========================================================= -->
+<div id="contact" class="card hidden">
+    <h2>Nous contacter</h2>
+    <p>📞 Numéro : (+33) — n'est pas encore disponible</p>
+    <p>📧 Email : localrotservers@gmail.com</p>
+    <p>💬 Discord : en cours de développement…</p>
+</div>
+
+<!-- =========================================================
+     A PROPOS
+========================================================= -->
+<div id="about" class="card hidden">
+    <h2>À propos de LocalRot</h2>
+    <div class="long-text">
+        LocalRot-Server est une plateforme professionnelle dédiée à la sécurisation
+        des échanges Roblox.  
+        <br><br>
+        Elle a été conçue pour lutter contre les scams, les vols d’objets
+        et les abus fréquents dans les serveurs privés non contrôlés.
+        <br><br>
+        Chaque réservation est associée à un utilisateur identifié,
+        un email obligatoire et un historique traçable côté serveur.
+        <br><br>
+        LocalRot garantit un environnement sécurisé, transparent
+        et professionnel pour tous les joueurs.
+    </div>
+</div>
+
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT FINAL
+========================================================= -->
+<script>
+
+/* =========================================================
+   VARIABLES GLOBALES
+========================================================= */
+let authMode = "login";
+let user = "";
+let selectedGame = "";
+
+/* =========================================================
+   SWITCH LOGIN / REGISTER
+========================================================= */
+function switchAuth(){
+    if(authMode === "login"){
+        authMode = "register";
+        authTitle.textContent = "Inscription";
+        authBtn.textContent = "Créer un compte";
+        authSwitchText.textContent = "Déjà un compte ?";
+    }else{
+        authMode = "login";
+        authTitle.textContent = "Connexion";
+        authBtn.textContent = "Se connecter";
+        authSwitchText.textContent = "Pas de compte ?";
+    }
+}
+
+/* =========================================================
+   SUBMIT AUTH
+========================================================= */
+function submitAuth(){
+    // Version démo UI (backend déjà prêt)
+    user = authUser.value;
+    auth.classList.add("hidden");
+    nav.classList.remove("hidden");
+    account.classList.remove("hidden");
+    userBox.textContent = "👤 " + user;
+    accUser.textContent = user;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function showTab(tab,btn){
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+
+    ["account","servers","contact","about"].forEach(t=>{
+        document.getElementById(t).classList.add("hidden");
+    });
+
+    document.getElementById(tab).classList.remove("hidden");
+}
+
+/* =========================================================
+   SERVERS LIST
+========================================================= */
+const games = [
+"Rivals","Steal a Brainrot","Grow a Garden","Blox Fruits","Pet Simulator X",
+"Adopt Me","Arsenal","Tower of Hell","MM2","Jailbreak",
+"Anime Adventures","Anime Fighters","BedWars","Shindo Life","King Legacy",
+"Doors","Brookhaven","Blade Ball","Fisch","Da Hood"
+];
+
+games.forEach(game=>{
+    const card = document.createElement("div");
+    card.className = "server-card";
+    card.innerHTML = `
+        <h3>${game}</h3>
+        <button class="primary">Réserver</button>
+    `;
+    card.querySelector("button").onclick = ()=>openReserve(game);
+    serversGrid.appendChild(card);
+});
+
+/* =========================================================
+   OPEN RESERVATION
+========================================================= */
+function openReserve(game){
+    selectedGame = game;
+    reserveTitle.textContent = "Réserver : " + game;
+    reserveModal.classList.remove("hidden");
+    updatePrice();
+}
+
+/* =========================================================
+   PRICE LOGIC
+========================================================= */
+type.onchange = amount.oninput = updatePrice;
+
+function updatePrice(){
+    let p = 0;
+
+    if(type.value==="month" && amount.value==1) p = 4.99;
+    if(type.value==="month" && amount.value==2) p = 9.98;
+
+    price.textContent = p.toFixed(2)+"€";
+
+    confirmBtn.classList.remove("hidden");
+    paypal1.classList.add("hidden");
+    paypal2.classList.add("hidden");
+}
+
+/* =========================================================
+   PAYPAL INIT (UNE SEULE FOIS)
+========================================================= */
+const paypal1 = document.getElementById("paypal-1month");
+const paypal2 = document.getElementById("paypal-2month");
+
+paypal.HostedButtons({
+    hostedButtonId:"DRTNES3TEBU22"
+}).render("#paypal-1month");
+
+paypal.HostedButtons({
+    hostedButtonId:"9UXGTWXCJFX8N"
+}).render("#paypal-2month");
+
+/* =========================================================
+   CONFIRM BUTTON
+========================================================= */
+confirmBtn.onclick = ()=>{
+    if(type.value==="month" && amount.value==1){
+        confirmBtn.classList.add("hidden");
+        paypal1.classList.remove("hidden");
+        return;
+    }
+
+    if(type.value==="month" && amount.value==2){
+        confirmBtn.classList.add("hidden");
+        paypal2.classList.remove("hidden");
+        return;
+    }
+
+    sendReservation();
+};
+
+/* =========================================================
+   BACKEND RESERVATION
+========================================================= */
+function sendReservation(){
+    fetch("/api/reserve",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            username:user,
+            game:selectedGame,
+            type:type.value,
+            amount:amount.value,
+            date:dateInput.value,
+            email:emailInput.value
+        })
+    }).then(()=>{
+        reserveMsg.textContent="Réservation enregistrée ✅";
+    });
+}
+
+</script>
+
+</body>
+</html>
